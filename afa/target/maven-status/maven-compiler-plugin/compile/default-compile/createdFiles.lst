@@ -1,0 +1,4 @@
+com/foxsports/afa/App.class
+com/foxsports/afa/add/Address.class
+com/foxsports/afa/vrt/HelloWorldVerticle.class
+com/foxsports/afa/vrt/MainVerticle.class
