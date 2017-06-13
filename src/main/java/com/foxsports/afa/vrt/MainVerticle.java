@@ -37,15 +37,15 @@ public class MainVerticle extends AbstractVerticle {
 	private void requestProcess(HttpServerRequest request){
 		
 		
-		if(logger.isDebugEnabled()) logger.debug("Procesando solicitud host: " + request.host() + " path: " + request.path() + " query: " + request.query());
+		if(logger.isDebugEnabled()) logger.debug("Request Process host: " + request.host() + " path: " + request.path() + " query: " + request.query());
 		
-		String mensaje = this.getClass().getName();
+		String message = this.getClass().getName();
 		
 		vertx
 			.eventBus()
-			.send(Address.HELLOWORLD_ADD, mensaje, reply -> {
+			.send(Address.HELLOWORLD_ADD, message, reply -> {
 				
-				if(logger.isDebugEnabled()) logger.debug("Recibiendo respuesta mensaje succeeded: " + reply.succeeded() + " body: " + reply.result().body());
+				if(logger.isDebugEnabled()) logger.debug("Receive answer succeeded: " + reply.succeeded() + " body: " + reply.result().body());
 				
 				if(reply.succeeded()){
 					request
