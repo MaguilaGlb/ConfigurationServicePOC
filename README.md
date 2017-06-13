@@ -9,7 +9,8 @@ mvn package
 ```
 
 Se genera un archivo de la forma afa-<version>-fat.jar, en el directorio target del proyecto.
-Nota: <version>: version actual del proyecto, para este primer baseline es 0.0.1-SNAPSHOT
+
+*Nota:* <version>: version actual del proyecto, para este primer baseline es 0.0.1-SNAPSHOT
 Nota 2: Como al empaquetar el proyecto se genera un FAT JAR, todas los jar de los que depende nuestro proyecto serán incluidos en el paquete a generar.
 
 ___
@@ -51,5 +52,6 @@ Para que el proyecto se ejecute corractamente se debe tener el archivo de config
 
 ```
 
-Nota: En el comando de ejecución modificar la propiedad del sistema -Dlog4j.configurationFile=file:/home/h.gonzalez/Dev/foxafa/log4j/log4j2.xml  por la propia en el ambiente donde se vaya a ejecutar el proyecto
-Nota 2: Este configuración básica del log4j2 envía los log del sistema a 2 diferentes partes a la consola y a un archivo, es necesario que en el tag RollingFile se modifique el atributo filePattern por el propio del ambiente donde se vaya a correr la aplicación
+*Nota:* En el comando de ejecución modificar la propiedad del sistema -Dlog4j.configurationFile=file:/home/h.gonzalez/Dev/foxafa/log4j/log4j2.xml  por la propia en el ambiente donde se vaya a ejecutar el proyecto
+
+*Nota 2:* Este configuración básica del log4j2 envía los log del sistema a 2 diferentes partes a la consola y a un archivo, es necesario que en el tag RollingFile se modifique el atributo filePattern por el propio del ambiente donde se vaya a correr la aplicación
