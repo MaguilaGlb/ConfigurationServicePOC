@@ -29,7 +29,7 @@ public class HelloWorldVerticle extends AbstractVerticle {
 		
 		if(logger.isDebugEnabled()) logger.debug("Response a request of: " + request.body());
 		
-		String greeting = "Hello World to " + request.body() + " !!!";		
+		String greeting = "Hello World to " + request.body() + " !!! X";		
 		request.reply(greeting);
 	}
 	
