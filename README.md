@@ -10,7 +10,7 @@ mvn package
 
 Se genera un archivo de la forma afa-<version>-fat.jar, en el directorio target del proyecto.
 
-*Nota:* <version>: version actual del proyecto, para este primer baseline es 0.0.1-SNAPSHOT
+*Nota:* <version>: versión actual del proyecto, para este primer baseline es 0.0.1-SNAPSHOT
 Nota 2: Como al empaquetar el proyecto se genera un FAT JAR, todas los jar de los que depende nuestro proyecto serán incluidos en el paquete a generar.
 
 ___
