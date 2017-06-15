@@ -1,9 +1,9 @@
-package com.foxsports.afa;
+package com.fox.platform.blueprint;
 
 import org.slf4j.Logger;
 
-import com.foxsports.afa.vrt.HelloWorldVerticle;
-import com.foxsports.afa.vrt.MainVerticle;
+import com.fox.platform.blueprint.vrt.HelloWorldVerticle;
+import com.fox.platform.blueprint.vrt.MainVerticle;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
