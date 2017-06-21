@@ -1,19 +1,7 @@
-# Proxy CRM
+# BaselineVertx
 
-Microriservice that act as proxy between users request and FOX service providers (Evergent, MPX).
+Template of a Microservice for use as a Baseline, of the other Microservices of the project
 
-The methods that proxy are:
-
-* hasAccess (Evergent): Returns if a user (userToken) has permission to view an event (urn)
-* getToken (MPX): Return a token to allow view an event
-
-This proxy implements a circuit baker pattern that allow fail tolerance
-
----
-# Endpoints
-
----
-# Circuit Breaker Behaviour
 
 ---
 # Build a Fat Jar
@@ -23,7 +11,7 @@ launch the script
 mvn package
 ```
 
-that build a file proxycrm-<version>-fat.jar, in the "target" directory of the project.
+that build a file <artifact>-<version>-fat.jar, in the "target" directory of the project.
 
 
 ---
@@ -73,7 +61,7 @@ The default on jar config file used, is:
     <Console name="CONSOLE" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
-    <RollingFile name="VERTXLOGS" append="true" fileName="/home/h.gonzalez/Dev/foxafa/logs/vertx.log" filePattern="/home/h.gonzalez/Dev/foxafa/logs/$${date:yyyy-MM}/vertx-%d{MM-dd-yyyy}-%i.log.gz">
+    <RollingFile name="VERTXLOGS" append="true" fileName="/some/directory/of/the/local/machine/vertx.log" filePattern="/some/directory/of/the/local/machine/$${date:yyyy-MM}/vertx-%d{MM-dd-yyyy}-%i.log.gz">
       <PatternLayout pattern="%d{ISO8601} %-5p %c:%L - %m%n" />
       <Policies>
         <TimeBasedTriggeringPolicy />
@@ -94,6 +82,3 @@ The default on jar config file used, is:
 </Configuration>
 
 ```
-
-*Note:* Into launch script modifies the system property -Dlog4j.configurationFile=file:/home/h.gonzalez/Dev/foxafa/log4j/log4j2.xml  instead of the appropiate to the project
-
