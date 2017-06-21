@@ -4,17 +4,8 @@
     <Console name="CONSOLE" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
-    <RollingFile name="VERTXLOGS" append="true" fileName="/home/h.gonzalez/Dev/foxafa/logs/vertx.log" filePattern="/home/h.gonzalez/Dev/foxafa/logs/$${date:yyyy-MM}/vertx-%d{MM-dd-yyyy}-%i.log.gz">
-      <PatternLayout pattern="%d{ISO8601} %-5p %c:%L - %m%n" />
-      <Policies>
-        <TimeBasedTriggeringPolicy />
-        <SizeBasedTriggeringPolicy size="250 MB"/>
-      </Policies>
-      <DefaultRolloverStrategy max="20"/>
-    </RollingFile>
     <Async name="ASYNC">
       <AppenderRef ref="CONSOLE"/>
-      <AppenderRef ref="VERTXLOGS"/>
     </Async>
   </Appenders>
   <Loggers>
