@@ -1,4 +1,4 @@
-package com.fox.platform.proxyurm.vrt;
+package com.fox.platform.vrt;
 
 import java.net.ServerSocket;
 
@@ -6,6 +6,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.fox.platform.vrt.ProxyEndpointVerticle;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -50,19 +52,16 @@ public class ProxyEndpointVerticleTest {
 		final Async async = context.async();
 
 		vertx.createHttpClient().getNow(port, "localhost", "/", response -> {
-			context.assertEquals(response.statusCode(),404);
-			async.complete();
+			context.assertEquals(response.statusCode(),200);
+			response.bodyHandler(body -> {
+				JsonObject result = body.toJsonObject();
+				context.assertEquals(result.getString("app"),"BaselineVertx");
+				async.complete();
+			});
+			
 		});
 	}
 	
-	@Test
-	public void testHasAccessEndpoint(TestContext context) {
-		final Async async = context.async();
-
-		vertx.createHttpClient().getNow(port, "localhost", ProxyEndpointVerticle.BASE_PATH + ProxyEndpointVerticle.HAS_ACCESS, response -> {
-			context.assertEquals(response.statusCode(),501);
-			async.complete();
-		});
-	}
+	
 	
 }

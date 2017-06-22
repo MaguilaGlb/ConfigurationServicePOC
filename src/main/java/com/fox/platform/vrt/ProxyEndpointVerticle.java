@@ -1,4 +1,6 @@
-package com.fox.platform.proxyurm.vrt;
+package com.fox.platform.vrt;
+
+import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,17 +10,14 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 public class ProxyEndpointVerticle extends AbstractVerticle {
 	
 	private Logger logger = LoggerFactory.getLogger(ProxyEndpointVerticle.class);
-
-	public final static String BASE_PATH = "/api/proxycrm/";
-
-	public final static String HAS_ACCESS = "hasAccess";	
-
+	
 	@Override
 	public void start(Future<Void> startFuture) throws Exception {
 		
@@ -27,9 +26,7 @@ public class ProxyEndpointVerticle extends AbstractVerticle {
 		}
 		
 		Router router = Router.router(vertx);
-
-		
-		router.get(BASE_PATH + HAS_ACCESS).handler(this::handleHasAccess);		
+				
 		router.route().handler(this::handleOthers);
 		
 
@@ -47,24 +44,20 @@ public class ProxyEndpointVerticle extends AbstractVerticle {
 	}
 
 	private void handleOthers(RoutingContext routingContext) {
+		
+		
+		JsonObject result = new JsonObject();
+		result.put("app", "BaselineVertx");
+		result.put("version", "0.0.1");
+		result.put("now", LocalDateTime.now().toString());
+		
+		
+		
 		HttpServerResponse response = routingContext.response();
 		response
-			.setStatusCode(404) // Not Found
-			.putHeader("content-type", "text/plain")
-			.end("ProxyCRM API");
-	}
-	
-	private void handleHasAccess(RoutingContext routingContext) {
-		HttpServerResponse response = routingContext.response();
-		sendNotImplementedError(response);
-	}
-	
-	
-	private void sendNotImplementedError(HttpServerResponse response){
-		response
-			.setStatusCode(501) // Not Implemented
-			.putHeader("content-type", "text/plain")
-			.end("ProxyCRM API");
+			.setStatusCode(200) 
+			.putHeader("content-type", "application/json; charset=utf-8")
+			.end(result.encode());
 	}
 
 }

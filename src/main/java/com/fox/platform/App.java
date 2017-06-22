@@ -1,4 +1,4 @@
-package com.fox.platform.proxyurm;
+package com.fox.platform;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fox.platform.proxyurm.vrt.ProxyEndpointVerticle;
+import com.fox.platform.vrt.ProxyEndpointVerticle;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 
