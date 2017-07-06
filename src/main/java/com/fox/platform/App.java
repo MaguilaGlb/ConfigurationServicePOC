@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fox.platform.vrt.ProxyEndpointVerticle;
+import com.fox.platform.vrt.EndpointVerticle;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 
@@ -190,7 +190,7 @@ public class App {
 	
 	private void deployVerticle(Vertx vertx, DeploymentOptions deploymentOptions){
 		
-		vertx.deployVerticle(ProxyEndpointVerticle.class.getName(),deploymentOptions);
+		vertx.deployVerticle(EndpointVerticle.class.getName(),deploymentOptions);
 		
 	}
 

@@ -14,9 +14,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
-public class ProxyEndpointVerticle extends AbstractVerticle {
+public class EndpointVerticle extends AbstractVerticle {
 	
-	private Logger logger = LoggerFactory.getLogger(ProxyEndpointVerticle.class);
+	private Logger logger = LoggerFactory.getLogger(EndpointVerticle.class);
 	
 	@Override
 	public void start(Future<Void> startFuture) throws Exception {

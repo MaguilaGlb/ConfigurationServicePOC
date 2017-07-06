@@ -7,7 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.fox.platform.vrt.ProxyEndpointVerticle;
+import com.fox.platform.vrt.EndpointVerticle;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -17,7 +17,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class ProxyEndpointVerticleTest {
+public class EndpointVerticleTest {
 	
 	private int port;
 	private Vertx vertx;
@@ -39,7 +39,7 @@ public class ProxyEndpointVerticleTest {
 		    );
 		
 		vertx = Vertx.vertx();
-		vertx.deployVerticle(ProxyEndpointVerticle.class.getName(),options, context.asyncAssertSuccess());
+		vertx.deployVerticle(EndpointVerticle.class.getName(),options, context.asyncAssertSuccess());
 	}
 
 	@After
