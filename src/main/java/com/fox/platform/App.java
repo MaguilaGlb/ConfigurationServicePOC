@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +14,10 @@ import com.fox.platform.vrt.ProxyEndpointVerticle;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 
@@ -27,9 +30,11 @@ public class App {
 	private Logger logger = LoggerFactory.getLogger(App.class);
 	
 	private static final String VERTX_LOGGING_DELEGATE = "vertx.logger-delegate-factory-class-name"; 
+	private static final String VERTX_CONFIG_FILE = "vertx.config-file";
 	private static final String LOG4J_CONFIG_FILE = "log4j.configurationFile";
 	private static final String HAZELCAST_CLUSTER_CONFIG_FILE = "hazelcast.cluster-config-file";
 	private static final String HAZELCAST_LOGGING_TYPE = "hazelcast.logging.type";
+	
 	
 	
 	private boolean existsClusterConfig(String clusterConfigPath){
@@ -116,6 +121,13 @@ public class App {
 		}
 	}
 	
+	private void loadSystemPropertyVertxConfigFile(){
+		String vertxConfigFile = System.getenv(VERTX_CONFIG_FILE);
+		if(vertxConfigFile != null) {
+			System.setProperty(VERTX_CONFIG_FILE, vertxConfigFile);
+		}
+	}
+	
 	private void loadSystemProperties(){
 		
 		
@@ -123,9 +135,11 @@ public class App {
 		loadSystemPropertyLog4jConfigFile();
 		loadSystemPropertyHazelcastConfigFile();
 		loadSystemPropertyHazelcastLoggingType();
-		
+		loadSystemPropertyVertxConfigFile();
 		
 	}
+	
+	
 	
 	public void startApp() {
 			
@@ -135,7 +149,8 @@ public class App {
 			String clusterConfigPath = System.getProperty(HAZELCAST_CLUSTER_CONFIG_FILE);			
 			ClusterManager clusterManager = getClusterManager(clusterConfigPath);
 			
-
+			
+			
 			VertxOptions options = new VertxOptions().setClusterManager(clusterManager);
 
 			Vertx.clusteredVertx(options, res -> {
@@ -146,11 +161,36 @@ public class App {
 					}
 					Vertx vertx = res.result();
 					
-					vertx.deployVerticle(ProxyEndpointVerticle.class.getName());
+					String configFile = System.getProperty(VERTX_CONFIG_FILE);
+					
+					if(StringUtils.isEmpty(configFile)){
+						//if not config file launch without config
+						deployVerticle(vertx, new DeploymentOptions());
+					} else {
+						vertx.fileSystem().readFile(configFile, result -> {
+							DeploymentOptions deployOptions = new DeploymentOptions();
+							if(result.succeeded()){
+								if(logger.isDebugEnabled()){
+									logger.debug("Launch with config File: [" + configFile + "]");
+								}
+								JsonObject config = result.result().toJsonObject();
+								deployOptions.setConfig(config);
+							} else if(logger.isDebugEnabled()){
+								logger.debug("Config File not found, launch without config: [" + configFile + "]",result.cause());
+							}
+							deployVerticle(vertx, deployOptions);
+						});
+					}
 				} else {
 					logger.error("Error al lanzar cluster vertx ", res.cause());
 				}
 			});
+		
+	}
+	
+	private void deployVerticle(Vertx vertx, DeploymentOptions deploymentOptions){
+		
+		vertx.deployVerticle(ProxyEndpointVerticle.class.getName(),deploymentOptions);
 		
 	}
 
