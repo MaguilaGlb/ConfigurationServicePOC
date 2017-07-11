@@ -2,6 +2,9 @@
 
 Template of a Microservice for use as a Baseline, of the other Microservices of the project
 
+---
+# Configuration
+The app takes the configuration of a file in YAML format, the path to this file must be configurates in the System env or System properties with name **vertx.config-file** if not set, the app takes the default file in the root of the classpath named  vertx-config.yaml
 
 ---
 # Build a Fat Jar
