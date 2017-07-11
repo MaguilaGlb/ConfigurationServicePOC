@@ -26,11 +26,14 @@ public class EndpointVerticle extends AbstractVerticle {
 		}
 		
 		Router router = Router.router(vertx);
+
 				
 		router.route().handler(this::handleOthers);
 		
-
-		vertx.createHttpServer().requestHandler(router::accept).listen(config().getInteger("http.port", 8080),
+		int port = config().getJsonObject("baseLine",new JsonObject()).getInteger("port",8080);
+		
+		
+		vertx.createHttpServer().requestHandler(router::accept).listen(port,
 				result -> {
 
 					if (result.succeeded()) {
@@ -50,8 +53,6 @@ public class EndpointVerticle extends AbstractVerticle {
 		result.put("app", "BaselineVertx");
 		result.put("version", "0.0.1");
 		result.put("now", LocalDateTime.now().toString());
-		
-		
 		
 		HttpServerResponse response = routingContext.response();
 		response

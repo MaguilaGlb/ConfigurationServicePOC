@@ -5,10 +5,13 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import com.fox.platform.vrt.EndpointVerticle;
 import com.hazelcast.config.Config;
@@ -35,6 +38,39 @@ public class App {
 	private static final String HAZELCAST_CLUSTER_CONFIG_FILE = "hazelcast.cluster-config-file";
 	private static final String HAZELCAST_LOGGING_TYPE = "hazelcast.logging.type";
 	
+	private static final String VERTX_OPTIONS_CONFIG_FIELD = "vertxOptions";
+	
+	
+	
+	public void startApp() {
+		
+		
+		loadSystemProperties();
+
+		String clusterConfigPath = System.getProperty(HAZELCAST_CLUSTER_CONFIG_FILE);			
+		ClusterManager clusterManager = getClusterManager(clusterConfigPath);
+		
+		String configFile = System.getProperty(VERTX_CONFIG_FILE);
+		JsonObject config = loadConfig(configFile);
+		
+		VertxOptions options = new VertxOptions(config.getJsonObject(VERTX_OPTIONS_CONFIG_FIELD,new JsonObject())).setClusterManager(clusterManager);
+
+		Vertx.clusteredVertx(options, res -> {
+			if (res.succeeded()) {
+				
+				if(logger.isDebugEnabled()){
+					logger.debug("it has launched vertx cluster with config: [" + clusterConfigPath + "]");
+				}
+				Vertx vertx = res.result();
+				DeploymentOptions deployOptions = new DeploymentOptions().setConfig(config);
+				deployVerticle(vertx, deployOptions);				
+				
+			} else {
+				logger.error("Error al lanzar cluster vertx ", res.cause());
+			}
+		});
+	
+	}
 	
 	
 	private boolean existsClusterConfig(String clusterConfigPath){
@@ -128,6 +164,60 @@ public class App {
 		}
 	}
 	
+	private JsonObject loadConfig(String configPath) {
+		try{
+			String configString = null;
+			if(configPath == null){
+				configString = loadConfigFileFromClasspath();
+			} else {
+				configString = loadConfigFile(configPath);
+			}
+			
+			Yaml yaml = new Yaml();
+			Map<String,Object> map = (Map<String,Object>) yaml.load(configString);
+			
+			return new JsonObject(map);
+			
+		} catch(Exception ex){
+			logger.error("Load Config Error, use Default config: " + ex.getMessage(), ex);
+			return new JsonObject();
+		}
+		
+	}
+	
+	private String loadConfigFile(String configPath) throws Exception {
+		
+		Path path = Paths.get(configPath);
+		if(Files.exists(path)){
+			
+			return new String(Files.readAllBytes(path),"UTF-8");
+			
+		} else {
+			if(logger.isInfoEnabled()){
+				logger.info("Not found config file, use default configuration");
+			}
+			return "";
+		}
+	}
+
+
+	private String loadConfigFileFromClasspath() throws Exception{
+		InputStream in = App.class.getResourceAsStream("/vertx-config.yaml"); 
+		if(in != null){
+			if(logger.isInfoEnabled()){
+				logger.info("Load Config File from the classpath");
+			}
+			
+			return IOUtils.toString(in, "UTF-8");
+		} else {
+			if(logger.isInfoEnabled()){
+				logger.info("Not found config file in classpath, use default configuration");
+			}
+			return "";
+		}
+	}
+
+
 	private void loadSystemProperties(){
 		
 		
@@ -137,54 +227,7 @@ public class App {
 		loadSystemPropertyHazelcastLoggingType();
 		loadSystemPropertyVertxConfigFile();
 		
-	}
-	
-	
-	
-	public void startApp() {
-			
 		
-			loadSystemProperties();
-
-			String clusterConfigPath = System.getProperty(HAZELCAST_CLUSTER_CONFIG_FILE);			
-			ClusterManager clusterManager = getClusterManager(clusterConfigPath);
-			
-			
-			
-			VertxOptions options = new VertxOptions().setClusterManager(clusterManager);
-
-			Vertx.clusteredVertx(options, res -> {
-				if (res.succeeded()) {
-					
-					if(logger.isDebugEnabled()){
-						logger.debug("it has launched vertx cluster with config: [" + clusterConfigPath + "]");
-					}
-					Vertx vertx = res.result();
-					
-					String configFile = System.getProperty(VERTX_CONFIG_FILE);
-					
-					if(StringUtils.isEmpty(configFile)){
-						//if not config file launch without config
-						deployVerticle(vertx, new DeploymentOptions());
-					} else {
-						vertx.fileSystem().readFile(configFile, result -> {
-							DeploymentOptions deployOptions = new DeploymentOptions();
-							if(result.succeeded()){
-								if(logger.isDebugEnabled()){
-									logger.debug("Launch with config File: [" + configFile + "]");
-								}
-								JsonObject config = result.result().toJsonObject();
-								deployOptions.setConfig(config);
-							} else if(logger.isDebugEnabled()){
-								logger.debug("Config File not found, launch without config: [" + configFile + "]",result.cause());
-							}
-							deployVerticle(vertx, deployOptions);
-						});
-					}
-				} else {
-					logger.error("Error al lanzar cluster vertx ", res.cause());
-				}
-			});
 		
 	}
 	
