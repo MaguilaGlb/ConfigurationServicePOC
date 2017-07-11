@@ -8,11 +8,12 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fox.platform.vrt.EndpointVerticle;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
@@ -173,8 +174,9 @@ public class App {
 				configString = loadConfigFile(configPath);
 			}
 			
-			Yaml yaml = new Yaml();
-			Map<String,Object> map = (Map<String,Object>) yaml.load(configString);
+			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+			Map<String,Object> map = mapper.readValue(configString, new TypeReference<Map<String, Object>>() {
+            });
 			
 			return new JsonObject(map);
 			
