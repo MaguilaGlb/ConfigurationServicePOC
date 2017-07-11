@@ -35,7 +35,9 @@ public class EndpointVerticleTest {
 		}
 
 		DeploymentOptions options = new DeploymentOptions()
-		    .setConfig(new JsonObject().put("http.port", port)
+		    .setConfig(new JsonObject()
+		    		.put("baseLine", new JsonObject()
+		    				.put("port", port))
 		    );
 		
 		vertx = Vertx.vertx();
