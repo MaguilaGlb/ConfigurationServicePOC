@@ -40,6 +40,7 @@ public class App {
 	private static final String HAZELCAST_LOGGING_TYPE = "hazelcast.logging.type";
 	
 	private static final String VERTX_OPTIONS_CONFIG_FIELD = "vertxOptions";
+	private static final String DEFAULT_CONFIG_FILE = "/vertx-config.yaml";
 	
 	
 	
@@ -67,7 +68,7 @@ public class App {
 				deployVerticle(vertx, deployOptions);				
 				
 			} else {
-				logger.error("Error al lanzar cluster vertx ", res.cause());
+				logger.error("Error during vertx cluster initialization ", res.cause());
 			}
 		});
 	
@@ -175,8 +176,10 @@ public class App {
 			}
 			
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-			Map<String,Object> map = mapper.readValue(configString, new TypeReference<Map<String, Object>>() {
-            });
+			
+			Map<String,Object> map = mapper.readValue(
+					configString, 
+					new TypeReference<Map<String, Object>>() {});
 			
 			return new JsonObject(map);
 			
@@ -204,7 +207,7 @@ public class App {
 
 
 	private String loadConfigFileFromClasspath() throws Exception{
-		InputStream in = App.class.getResourceAsStream("/vertx-config.yaml"); 
+		InputStream in = App.class.getResourceAsStream(DEFAULT_CONFIG_FILE); 
 		if(in != null){
 			if(logger.isInfoEnabled()){
 				logger.info("Load Config File from the classpath");
