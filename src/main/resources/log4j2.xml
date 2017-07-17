@@ -9,6 +9,9 @@
     </Async>
   </Appenders>
   <Loggers>
+  	<Logger name="com.hazelcast" level="ERROR">
+      <AppenderRef ref="ASYNC"/>
+    </Logger>
     <Root level="ALL">
       <AppenderRef ref="ASYNC"/>
     </Root>

@@ -1,0 +1,39 @@
+{
+    "circuitBreakerTest" : {
+        "circuitBreaker" : {
+            "timeout" : 10000,
+            "maxFailures" : 5,
+            "fallbackOnFailure" : false,
+            "notificationAddress" : "vertx.circuit-breaker",
+            "notificationPeriod" : 2000,
+            "resetTimeout" : 30000,
+            "maxRetries" : 0,
+            "isForcedOpen" : false
+        }
+    },
+    "vertxOptions":{
+		"eventLoopPoolSize":8,
+		"haEnabled":false,
+		"haGroup": "__DEFAULT__",  
+		"blockedThreadCheckInterval":3600000
+	},
+	"ServerHttpVerticle": {
+		"http.port":8080,
+		"root.endpoint.uri": "/ping",
+		"root.endpoint.httpmethod":"GET"
+	},
+    "configRetrieverOptions" : {
+        "scanPeriod" : 2000,
+        "stores" : [
+            {
+		        "type": "http",
+		        "format": "json",
+		        "config": {
+			        "host":"localhost",
+			        "port":3000,
+			        "path":"/"
+		        }
+	        }
+        ]
+    }
+}

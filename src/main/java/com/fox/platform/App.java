@@ -2,11 +2,14 @@ package com.fox.platform;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fox.platform.vrt.CircuitBreakerTestVerticle;
 import com.fox.platform.vrt.EndpointVerticle;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
@@ -35,12 +39,14 @@ public class App {
 	
 	private static final String VERTX_LOGGING_DELEGATE = "vertx.logger-delegate-factory-class-name"; 
 	private static final String VERTX_CONFIG_FILE = "vertx.config-file";
+	private static final String VERTX_CONFIG_URL = "vertx.config-url";
 	private static final String LOG4J_CONFIG_FILE = "log4j.configurationFile";
 	private static final String HAZELCAST_CLUSTER_CONFIG_FILE = "hazelcast.cluster-config-file";
 	private static final String HAZELCAST_LOGGING_TYPE = "hazelcast.logging.type";
 	
 	private static final String VERTX_OPTIONS_CONFIG_FIELD = "vertxOptions";
-	private static final String DEFAULT_CONFIG_FILE = "/vertx-config.yaml";
+	private static final String DEFAULT_CONFIG_FILE = "/config.json";
+	
 	
 	
 	
@@ -52,8 +58,10 @@ public class App {
 		String clusterConfigPath = System.getProperty(HAZELCAST_CLUSTER_CONFIG_FILE);			
 		ClusterManager clusterManager = getClusterManager(clusterConfigPath);
 		
-		String configFile = System.getProperty(VERTX_CONFIG_FILE);
-		JsonObject config = loadConfig(configFile);
+		
+		
+		JsonObject config = loadConfig();
+		
 		
 		VertxOptions options = new VertxOptions(config.getJsonObject(VERTX_OPTIONS_CONFIG_FIELD,new JsonObject())).setClusterManager(clusterManager);
 
@@ -166,7 +174,46 @@ public class App {
 		}
 	}
 	
-	private JsonObject loadConfig(String configPath) {
+	private void loadSystemPropertyVertxConfigURL(){
+		String vertxConfigFile = System.getenv(VERTX_CONFIG_URL);
+		if(vertxConfigFile != null) {
+			System.setProperty(VERTX_CONFIG_URL, vertxConfigFile);
+		}
+	}
+	
+	private JsonObject loadConfig() {
+		// first try to get config from URL if not then load from file
+		JsonObject config = loadConfigFromURL();
+		if(config == null){
+			String configFile = System.getProperty(VERTX_CONFIG_FILE);
+			return loadConfigFromFile(configFile);
+		} else {
+			return config;
+		}
+		
+	}
+	
+	private JsonObject loadConfigFromURL() {
+		
+		String configURL = System.getProperty(VERTX_CONFIG_URL);
+		if(configURL == null){
+			return null;
+		}
+		
+		try{
+			URL url = new URL(configURL);
+			InputStream in = url.openStream();
+			return new JsonObject(IOUtils.toString(in, Charset.forName("UTF-8")));
+		} catch(Exception ex){			
+			logger.error("Error when try to load the config from url: " + configURL + " then load config from file or default",ex);
+			return null;
+		}
+		
+	}
+	
+	
+	private JsonObject loadConfigFromFile(String configPath){
+		
 		try{
 			String configString = null;
 			if(configPath == null){
@@ -175,16 +222,41 @@ public class App {
 				configString = loadConfigFile(configPath);
 			}
 			
+			if(configString != null && FilenameUtils.getExtension(configString).equals("yaml")){
+				return loadConfigFromYaml(configString);
+			} else {
+				return loadConfigFromJson(configString);
+			}
+		} catch(Exception ex){
+			logger.error("Load Config Error, use Default config: " + ex.getMessage(), ex);
+			return new JsonObject();
+		}
+		
+		
+	}
+	
+	private JsonObject loadConfigFromJson(String content) {
+		try{
+			return new JsonObject(content);
+		} catch(Exception ex){
+			logger.error("Load Config from JSON File Error, use Default config: " + ex.getMessage(), ex);
+			return new JsonObject();
+		}
+	}
+	
+
+	private JsonObject loadConfigFromYaml(String content) {
+		try{
 			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 			
 			Map<String,Object> map = mapper.readValue(
-					configString, 
+					content, 
 					new TypeReference<Map<String, Object>>() {});
 			
 			return new JsonObject(map);
 			
 		} catch(Exception ex){
-			logger.error("Load Config Error, use Default config: " + ex.getMessage(), ex);
+			logger.error("Load Config from YAML File Error, use Default config: " + ex.getMessage(), ex);
 			return new JsonObject();
 		}
 		
@@ -230,6 +302,7 @@ public class App {
 		loadSystemPropertyLog4jConfigFile();
 		loadSystemPropertyHazelcastConfigFile();
 		loadSystemPropertyHazelcastLoggingType();
+		loadSystemPropertyVertxConfigURL();
 		loadSystemPropertyVertxConfigFile();
 		
 		
@@ -238,7 +311,11 @@ public class App {
 	
 	private void deployVerticle(Vertx vertx, DeploymentOptions deploymentOptions){
 		
+		
+		DeploymentOptions testOptions = new DeploymentOptions(deploymentOptions).setInstances(1);
+		vertx.deployVerticle(CircuitBreakerTestVerticle.class.getName(),testOptions);
 		vertx.deployVerticle(EndpointVerticle.class.getName(),deploymentOptions);
+		//vertx.deployVerticle(PingVerticle.class.getName(),deploymentOptions);
 		
 	}
 
