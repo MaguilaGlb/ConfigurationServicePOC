@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Appenders>
+    <Console name="CONSOLE" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </Console>
+    <Async name="ASYNC">
+      <AppenderRef ref="CONSOLE"/>
+    </Async>
+  </Appenders>
+  <Loggers>
+  	<Logger name="com.hazelcast" level="ERROR">
+      <AppenderRef ref="ASYNC"/>
+    </Logger>
+    <Root level="ALL">
+      <AppenderRef ref="ASYNC"/>
+    </Root>
+  </Loggers>
+</Configuration>
