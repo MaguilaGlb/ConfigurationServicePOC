@@ -15,7 +15,7 @@
 			"path" : "/",
 			"ssl"  : false 
 		},
-		"killswitch" : false
+		"killswitch" : true
     },
     "vertxOptions":{
 		"eventLoopPoolSize":8,
