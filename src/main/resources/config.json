@@ -28,14 +28,6 @@
 		"root.endpoint.uri": "/ping",
 		"root.endpoint.httpmethod":"GET"
 	},
-	"httpConfigRetriever":{
-	    "format": "json",
-        "config": {
-	        "host":"localhost",
-	        "port":3000,
-	        "path":"/"
-        }
-	},
 	"adminVerticle":{   
 	    "configRetrieverOptions" : {
             "scanPeriod" : -1,
