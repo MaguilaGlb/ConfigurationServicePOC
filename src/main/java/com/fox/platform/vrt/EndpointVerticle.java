@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import com.fox.platform.vo.RequestObject;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.config.ConfigRetriever;
+import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpHeaders;
@@ -25,6 +27,8 @@ public class EndpointVerticle extends AbstractVerticle {
 	
 	private String id = UUID.randomUUID().toString();
 	
+	private ConfigRetriever configRetriever;
+	
 	@Override
 	public void start(Future<Void> startFuture) throws Exception {
 		
@@ -32,12 +36,16 @@ public class EndpointVerticle extends AbstractVerticle {
 			logger.debug("Start Http Server at port: " + config().getInteger("http.port", 8080));			
 		}
 		
-		Router router = Router.router(vertx);
+		ConfigRetrieverOptions configRetrieverOptions = new ConfigRetrieverOptions(config().getJsonObject("adminVerticle").getJsonObject(AbstractFoxVerticle.CONFIG_RETRIVER_OPTIONS_CONFIG_FIELD));		
+		configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions);
+		
+		Router router = Router.router(vertx);	
+		
 		router.get("/updateConfig").handler(this::handleUpdateConfig);
 		router.route().handler(this::handleOthers);
 		
 		
-		int port = config().getJsonObject("baseLine",new JsonObject()).getInteger("port",8080);
+		int port = config().getJsonObject("ServerHttpVerticle",new JsonObject()).getInteger("http.port",8080);
 		
 		
 		vertx.createHttpServer().requestHandler(router::accept).listen(port,
@@ -54,14 +62,27 @@ public class EndpointVerticle extends AbstractVerticle {
 	}
 	
 	private void handleUpdateConfig(RoutingContext routingContext) {
-		vertx.eventBus().<Void>publish(AbstractFoxVerticle.UPDATE_CONFIG_ADDRESS, null);
+		configRetriever.getConfig(handler -> {
+			HttpServerResponse response = routingContext.response();
+			if(handler.succeeded()){
+				
+				JsonObject config = handler.result();
+				
+				vertx.eventBus().<JsonObject>publish(AbstractFoxVerticle.UPDATE_CONFIG_ADDRESS, config);
+				
+				response
+					.setStatusCode(HttpResponseStatus.OK.code()) 
+					.putHeader(HttpHeaders.CONTENT_TYPE, MimeMapping.getMimeTypeForExtension("json"))
+					.end(config.encode());
+				
+			} else {
+				response
+					.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()) 
+					.putHeader(HttpHeaders.CONTENT_TYPE, MimeMapping.getMimeTypeForExtension("txt"))
+					.end(ExceptionUtils.getStackTrace(handler.cause()));
+			}
+		});
 		
-		HttpServerResponse response = routingContext.response();
-		
-		response
-			.setStatusCode(HttpResponseStatus.OK.code()) 
-			.putHeader(HttpHeaders.CONTENT_TYPE, MimeMapping.getMimeTypeForExtension("txt"))
-			.end("OK");
 	}
 	
 	private void handleOthers(RoutingContext routingContext) {

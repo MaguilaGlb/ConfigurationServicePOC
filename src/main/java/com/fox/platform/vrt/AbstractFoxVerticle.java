@@ -1,32 +1,29 @@
 package com.fox.platform.vrt;
 
-import io.vertx.config.ConfigRetriever;
-import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-public class AbstractFoxVerticle extends AbstractVerticle {
+public abstract class AbstractFoxVerticle extends AbstractVerticle {
 	
 	public static final String CONFIG_RETRIVER_OPTIONS_CONFIG_FIELD = "configRetrieverOptions";
+	
+	public static final String REQUEST_TO_UPDATE_CONFIG_ADDRESS = "requestToupdateConfigAddress";
 	
 	public static final String UPDATE_CONFIG_ADDRESS = "updateConfigAddress";
 	
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
-	private ConfigRetriever configRetriever;
+	
 	
 	private JsonObject config = null;
 	
 	@Override
 	public void start(Future<Void> startFuture) throws Exception {
-		
-		configRetriever = createConfigRetriever(config().getJsonObject(CONFIG_RETRIVER_OPTIONS_CONFIG_FIELD, new JsonObject())); 
-		
-		vertx.eventBus().<Void>consumer(UPDATE_CONFIG_ADDRESS, handler -> updateConfig(configRetriever));
-		
+		vertx.eventBus().<JsonObject>consumer(UPDATE_CONFIG_ADDRESS, this::updateConfig);
 		super.start(startFuture);
 	}
 	
@@ -41,43 +38,14 @@ public class AbstractFoxVerticle extends AbstractVerticle {
 		
 	}
 	
-	public void configChange(JsonObject newConfig, JsonObject oldConfig){
-		
-		//if the config retirever change then close and create new
-		JsonObject newConfgiRetreiver = newConfig.getJsonObject(CONFIG_RETRIVER_OPTIONS_CONFIG_FIELD,new JsonObject());
-		if(! config.equals(newConfig)){
-			configRetriever.close();
-			configRetriever = createConfigRetriever(newConfgiRetreiver);
-		}
-		
-		
-	}
+	public abstract void configChange(JsonObject newConfig, JsonObject oldConfig);
 	
-	private ConfigRetriever createConfigRetriever(JsonObject configRetrieverJson) {
-		
-		ConfigRetrieverOptions configRetrieverOptions = new ConfigRetrieverOptions(configRetrieverJson);
-		
-		logger.info(super.deploymentID() + " Create a new Config Retriver with options: " + configRetrieverOptions.toJson().encode());
-		
-		ConfigRetriever newConfigRetriever = ConfigRetriever.create(vertx, configRetrieverOptions);
-		
-		updateConfig(newConfigRetriever);
-		newConfigRetriever.listen(change -> {
-			configChange(change.getNewConfiguration(), change.getPreviousConfiguration());
-			config.mergeIn(change.getNewConfiguration());
-		});
-		
-		return newConfigRetriever;
-	}
 	
-	private void updateConfig(ConfigRetriever configRetrieverToUpdate){
-		configRetrieverToUpdate.getConfig(json -> {
-			if(json.succeeded()){
-				config = json.result();
-			} else {
-				logger.error(super.deploymentID() + " Error in ConfigRetriever to load config: " + json.cause().getMessage(), json.cause());
-			}
-		});
+	
+	private void updateConfig(Message<JsonObject> configMessage){
+		JsonObject newConfig = configMessage.body();
+		configChange(newConfig, config);
+		config = newConfig;
 	}
 
 }

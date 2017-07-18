@@ -80,8 +80,6 @@ public class CircuitBreakerTestVerticle extends AbstractFoxVerticle {
 		
 		logger.info(super.deploymentID() + " Config Change ...");
 		
-		super.configChange(newConfig, oldConfig);
-		
 		JsonObject newVerticleConfig = newConfig.getJsonObject(CIRCUIT_BREAKER_TEST_CONFIG_FIELD, new JsonObject());
 		JsonObject newCircuitBreakerConfig = newVerticleConfig.getJsonObject(CIRCUIT_BREAKER_CONFIG_FIELD, new JsonObject());
 		

@@ -39,6 +39,12 @@
 			        "port":3000,
 			        "path":"/"
 		        }
+	        },
+            {
+		        "type" : "event-bus",
+                "config" : {
+                    "address" : "updateConfigAddress"
+                }
 	        }
         ]
     }

@@ -313,10 +313,10 @@ public class App {
 	private void deployVerticle(Vertx vertx, DeploymentOptions deploymentOptions){
 		
 		
-		DeploymentOptions testOptions = new DeploymentOptions(deploymentOptions).setInstances(5);
+		DeploymentOptions testOptions = new DeploymentOptions(deploymentOptions).setInstances(1);
 		vertx.deployVerticle(CircuitBreakerTestVerticle.class.getName(),testOptions);
 		vertx.deployVerticle(EndpointVerticle.class.getName(),deploymentOptions);
-		vertx.deployVerticle(PingVerticle.class.getName(),deploymentOptions);
+		//vertx.deployVerticle(PingVerticle.class.getName(),deploymentOptions);
 		
 	}
 
