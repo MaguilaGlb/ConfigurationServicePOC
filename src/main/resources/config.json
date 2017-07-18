@@ -6,16 +6,16 @@
             "fallbackOnFailure" : false,
             "notificationAddress" : "vertx.circuit-breaker",
             "notificationPeriod" : 2000,
-            "resetTimeout" : 30000,
+            "resetTimeout" : 5000,
             "maxRetries" : 0            
         },
-	"endpoint" : {
-		"host" : "www.google.com",
-		"port" : "80",
-		"path" : "/",
-		"ssl"  : false 
-	},
-	"killswitch" : true
+		"endpoint" : {
+			"host" : "www.google.com",
+			"port" : "80",
+			"path" : "/",
+			"ssl"  : false 
+		},
+		"killswitch" : false
     },
     "vertxOptions":{
 		"eventLoopPoolSize":8,
@@ -28,24 +28,32 @@
 		"root.endpoint.uri": "/ping",
 		"root.endpoint.httpmethod":"GET"
 	},
-    "configRetrieverOptions" : {
-        "scanPeriod" : -1,
-        "stores" : [
-            {
-		        "type": "http",
-		        "format": "json",
-		        "config": {
-			        "host":"localhost",
-			        "port":3000,
-			        "path":"/"
-		        }
-	        },
-            {
-		        "type" : "event-bus",
-                "config" : {
-                    "address" : "updateConfigAddress"
-                }
-	        }
-        ]
-    }
+	"httpConfigRetriever":{
+	    "format": "json",
+        "config": {
+	        "host":"localhost",
+	        "port":3000,
+	        "path":"/"
+        }
+	},
+	"adminVerticle":{   
+	    "configRetrieverOptions" : {
+            "scanPeriod" : -1,
+            "stores" : [
+                {
+		            "type": "http",
+		            "format": "json",
+		            "config": {
+			            "host":"localhost",
+			            "port":3000,
+			            "path":"/"
+		            }
+	            }
+                
+            ]
+        }
+	    
+	    
+	}
+    
 }
