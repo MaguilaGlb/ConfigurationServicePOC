@@ -1,11 +1,11 @@
 package com.fox.platform.vrt;
 
-import com.fox.platform.circuitbreaker.FoxCircuitBreakerOptions;
 import com.fox.platform.vo.Endpoint;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.circuitbreaker.CircuitBreaker;
+import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -16,6 +16,7 @@ public class CircuitBreakerTestVerticle extends AbstractFoxVerticle {
 	public static final String ADDRESS = "CircuitBreakerTestAddress";
 	
 	private static final String CIRCUIT_BREAKER_TEST_CONFIG_FIELD = "circuitBreakerTest";
+	private static final String KILLSWITCH_CONFIG_FIELD = "killswitch";
 	private static final String CIRCUIT_BREAKER_CONFIG_FIELD = "circuitBreaker";
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -35,26 +36,45 @@ public class CircuitBreakerTestVerticle extends AbstractFoxVerticle {
 		
 		vertx.eventBus().<String>consumer(
 				ADDRESS, 
-				request -> 
-					circuitBreaker.<JsonObject>executeWithFallback(
-							future -> calltoEndpoint(future), 
-							error -> replyOnCircuitOpen(error)
-							).setHandler(handler -> {
-								
-								if(handler.succeeded()){
-									JsonObject response = handler.result();
-									request.reply(response);
-								} else {
-									request.fail(500, handler.cause().getMessage());
-								}
-							})
-				);
+				request -> executeRequest(request));
 		
 		super.start(startFuture);
 		
 	}
 	
 	
+	private void executeRequest(Message<String> request){
+		
+		JsonObject circuitBreakerTestConfig = config().getJsonObject(CIRCUIT_BREAKER_TEST_CONFIG_FIELD, new JsonObject());		
+		if(! circuitBreakerTestConfig.getBoolean(KILLSWITCH_CONFIG_FIELD,Boolean.FALSE)){
+			circuitBreaker.<JsonObject>executeWithFallback(
+					future -> calltoEndpoint(future), 
+					error -> replyOnCircuitOpen(error)
+					).setHandler(handler -> {
+						
+						if(handler.succeeded()){
+							JsonObject response = handler.result();
+							request.reply(response);
+						} else {
+							request.fail(500, handler.cause().getMessage());
+						}
+					});
+		} else {
+			repĺyKillSwitch(request);
+		}
+	}
+	
+	private void repĺyKillSwitch(Message<String> request) {
+		JsonObject responseOnKillSwitch = new JsonObject()
+				.put("isError", true)
+				.put("circuitBreakerStatus", "KILLSWITCH")
+				.put("errorMessage", "Kill Switch Status");
+		
+		request.reply(responseOnKillSwitch);
+		
+	}
+
+
 	@Override
 	public void configChange(JsonObject newConfig, JsonObject oldConfig){
 		
@@ -90,14 +110,8 @@ public class CircuitBreakerTestVerticle extends AbstractFoxVerticle {
 		
 		logger.info(super.deploymentID() + " Create a new Circuit Breaker with config: " + circuitBreakerOptions.encode());
 		
-		FoxCircuitBreakerOptions options = circuitBreakerOptions.mapTo(FoxCircuitBreakerOptions.class);
+		CircuitBreakerOptions options = circuitBreakerOptions.mapTo(CircuitBreakerOptions.class);
 		CircuitBreaker newCircuitBreaker = CircuitBreaker.create("MyCircuitBreaker", vertx, options);
-		if(options.isForceOpen()){
-			newCircuitBreaker.open();
-			newCircuitBreaker.halfOpenHandler(handler -> {
-				newCircuitBreaker.open();
-			});
-		}
 		return newCircuitBreaker;		
 		
 	}
