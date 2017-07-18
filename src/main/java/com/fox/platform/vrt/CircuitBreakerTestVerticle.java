@@ -3,6 +3,7 @@ package com.fox.platform.vrt;
 import com.fox.platform.circuitbreaker.FoxCircuitBreakerOptions;
 import com.fox.platform.vo.Endpoint;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -110,10 +111,11 @@ public class CircuitBreakerTestVerticle extends AbstractFoxVerticle {
 			.ssl(endpoint.isSsl())
 			.send(handler -> {
 				if(handler.succeeded()){
-					JsonObject response = handler.result().bodyAsJsonObject();
-					response
-						.put("isError", false)
-						.put("circuitBreakerStatus", circuitBreaker.state());
+					
+					JsonObject response = new JsonObject()
+							.put("statusCode", handler.result().statusCode())
+							.put("isError", false)
+							.put("circuitBreakerStatus", circuitBreaker.state());
 					future.complete(response);
 				} else {
 					logger.error(this.deploymentID() + " Error when call to endpoint: " + handler.cause().getMessage(), handler.cause());

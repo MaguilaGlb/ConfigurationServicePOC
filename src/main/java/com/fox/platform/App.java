@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fox.platform.vrt.CircuitBreakerTestVerticle;
 import com.fox.platform.vrt.EndpointVerticle;
+import com.fox.platform.vrt.PingVerticle;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 
@@ -312,10 +313,10 @@ public class App {
 	private void deployVerticle(Vertx vertx, DeploymentOptions deploymentOptions){
 		
 		
-		DeploymentOptions testOptions = new DeploymentOptions(deploymentOptions).setInstances(1);
+		DeploymentOptions testOptions = new DeploymentOptions(deploymentOptions).setInstances(5);
 		vertx.deployVerticle(CircuitBreakerTestVerticle.class.getName(),testOptions);
 		vertx.deployVerticle(EndpointVerticle.class.getName(),deploymentOptions);
-		//vertx.deployVerticle(PingVerticle.class.getName(),deploymentOptions);
+		vertx.deployVerticle(PingVerticle.class.getName(),deploymentOptions);
 		
 	}
 
