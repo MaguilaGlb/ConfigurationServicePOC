@@ -29,7 +29,7 @@
 		"root.endpoint.httpmethod":"GET"
 	},
     "configRetrieverOptions" : {
-        "scanPeriod" : 2000,
+        "scanPeriod" : -1,
         "stores" : [
             {
 		        "type": "http",
